@@ -1,6 +1,8 @@
 // Shared search settings. Search engines stay blocked until FM_INDEXABLE=1 is set in Vercel.
 // FM_SITE_URL is the final public address, used for canonical links, the sitemap and share previews.
-export const SITE = (process.env.FM_SITE_URL || 'https://falcon-manor-website.vercel.app').replace(/\/+$/, '');
+// Without it, the project's production domain on Vercel is used (VERCEL_PROJECT_PRODUCTION_URL, set by Vercel).
+const VERCEL_PROD = process.env.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL : '';
+export const SITE = (process.env.FM_SITE_URL || VERCEL_PROD || 'https://falcon-manor.vercel.app').replace(/\/+$/, '');
 export const INDEXABLE = process.env.FM_INDEXABLE === '1';
 export const NAMES = { home: 'Home', community: 'Community', homes: 'Homes', lifestyle: 'Lifestyle', relocation: 'Relocation', schools: 'Schools', news: 'News', hoa: 'HOA & Tax Rates', residents: 'Residents', realtors: 'Realtor Specialists', contact: 'Contact' };
 export const VIEWS = Object.keys(NAMES);
