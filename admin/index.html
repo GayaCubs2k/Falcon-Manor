@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Falcon Manor CMS</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+:root { --paper: #F6F4EF; --sand: #ECE8E0; --line: rgba(23, 48, 47, .12); --ink: #17302F; --text: #474A4F; --muted: #7E8185; --midnight: #224D51; --deep: #132B2D; --terra: #BB614A; --terra-deep: #A04F3A; --gold: #B0945C; --ok: #3E7B55; --warn: #A86A1F; --bad: #B03A2E; --f-display: "Fraunces", Georgia, serif; --f-body: "Montserrat", "Helvetica Neue", Arial, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+#app { min-height: 100%; display: flex; flex-direction: column; }
+#app > * { flex: 1 0 auto; }
+body { background: var(--paper); color: var(--text); font: 14px/1.55 var(--f-body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; color: var(--ink); margin: 0; letter-spacing: -.01em; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--terra-deep); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* sign-in */
+.gate { min-height: 100%; display: grid; place-items: center; padding: 24px; background: var(--deep) radial-gradient(120% 90% at 15% 0%, #2C5D61 0%, #1B3D40 50%, #132B2D 100%); }
+.gate-card { width: min(420px, 100%); background: #fff; padding: 36px 32px 30px; box-shadow: 0 40px 90px -40px rgba(0, 0, 0, .6); }
+.gate-card .mark { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.gate-card .mark img { width: 52px; }
+.gate-card .mark b { font: 600 13px/1.2 var(--f-body); letter-spacing: .26em; color: var(--midnight); }
+.gate-card h1 { font-size: 30px; }
+.gate-card p { margin: 8px 0 20px; color: var(--muted); }
+.gate-card ol { padding-left: 18px; margin: 14px 0 0; }
+.gate-card ol li { margin: 8px 0; }
+.gate-card code { background: var(--sand); padding: 1px 6px; font-size: 12.5px; }
+/* shell */
+.shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100%; }
+.side { background: var(--deep); color: #C9D4D0; padding: 22px 14px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.side .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; color: #F4F1EA; text-decoration: none; }
+.side .brand img { width: 40px; filter: brightness(0) invert(1); opacity: .9; }
+.side .brand b { font: 600 11.5px/1.25 var(--f-body); letter-spacing: .24em; }
+.side .brand small { display: block; font-weight: 500; letter-spacing: .12em; color: var(--gold); margin-top: 3px; }
+.side h4 { margin: 14px 10px 6px; font: 600 10.5px/1 var(--f-body); letter-spacing: .18em; text-transform: uppercase; color: #7F9A95; }
+.side button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; border: 0; background: none; color: inherit; cursor: pointer; border-left: 3px solid transparent; }
+.side button:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+.side button[aria-current="page"] { background: rgba(255, 255, 255, .1); color: #fff; border-left-color: var(--terra); }
+.side .count { font: 600 11px/1 var(--f-body); background: var(--terra); color: #fff; padding: 3px 7px; border-radius: 999px; }
+.side .grow { flex: 1; }
+.main { min-width: 0; display: flex; flex-direction: column; }
+.bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 26px; background: rgba(246, 244, 239, .94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.bar .state { margin-right: auto; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--ink); }
+.bar .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); }
+.bar .dirty .dot { background: var(--warn); }
+.menu-btn { display: none; }
+.content { padding: 28px 26px 80px; max-width: 1120px; width: 100%; }
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.head h1 { font-size: 34px; }
+.head p { margin: 6px 0 0; color: var(--muted); max-width: 70ch; }
+/* controls */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; font-weight: 600; font-size: 12.5px; white-space: nowrap; text-decoration: none; transition: background .2s, border-color .2s, color .2s; }
+.btn:hover { border-color: rgba(23, 48, 47, .3); }
+.btn.primary { background: var(--terra); border-color: var(--terra); color: #fff; }
+.btn.primary:hover { background: var(--terra-deep); border-color: var(--terra-deep); }
+.btn.dark { background: var(--ink); border-color: var(--ink); color: #fff; }
+.btn.danger { color: var(--bad); }
+.btn.danger:hover { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.sm { height: 30px; padding: 0 12px; font-size: 12px; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.link { border: 0; background: none; color: var(--terra-deep); cursor: pointer; font-weight: 600; font-size: 12px; padding: 0; }
+.field { display: grid; gap: 6px; margin-bottom: 14px; }
+.field > span { font: 600 11.5px/1.2 var(--f-body); letter-spacing: .06em; color: var(--ink); text-transform: uppercase; }
+.field small { color: var(--muted); font-size: 12px; }
+input[type="text"], input[type="email"], input[type="url"], input[type="tel"], input[type="password"], input[type="search"], input[type="date"], input[type="number"], select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); background: #fff; outline: none; border-radius: 0; transition: border-color .2s, box-shadow .2s; }
+input:focus, select:focus, textarea:focus { border-color: var(--midnight); box-shadow: 0 0 0 3px rgba(34, 77, 81, .12); }
+textarea { min-height: 70px; resize: vertical; line-height: 1.55; }
+.card { background: #fff; border: 1px solid var(--line); padding: 18px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.stack { display: grid; gap: 12px; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font: 600 10.5px/1 var(--f-body); letter-spacing: .08em; text-transform: uppercase; background: var(--sand); color: var(--ink); }
+.chip.ok { background: #E1EFE5; color: var(--ok); } .chip.warn { background: #F7EBD8; color: var(--warn); } .chip.bad { background: #F6E1DE; color: var(--bad); } .chip.new { background: #F3DED6; color: var(--terra-deep); }
+.muted { color: var(--muted); }
+.empty { padding: 34px; text-align: center; color: var(--muted); border: 1px dashed var(--line); background: rgba(255, 255, 255, .6); }
+/* dashboard */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.stat h3 { font-size: 15px; font-family: var(--f-body); font-weight: 600; letter-spacing: .02em; }
+.stat b { display: block; font: 400 30px/1.15 var(--f-display); color: var(--ink); margin: 8px 0 4px; }
+.stat p { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+/* text editor */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
+.tabs button { height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 600; font-size: 12px; color: var(--ink); }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.tx { background: #fff; border: 1px solid var(--line); padding: 12px 14px; }
+.tx.changed { border-left: 3px solid var(--terra); }
+.tx-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 6px; }
+.tx-top span { font: 600 11px/1.3 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tx textarea { min-height: 44px; }
+.hint { background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); padding: 10px 14px; margin-bottom: 16px; color: var(--text); font-size: 13px; }
+/* images */
+.imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.img-card { background: #fff; border: 1px solid var(--line); display: flex; flex-direction: column; }
+.img-card .ph { aspect-ratio: 4 / 3; background: var(--sand) center / cover no-repeat; position: relative; }
+.img-card .ph .chip { position: absolute; left: 8px; top: 8px; }
+.img-card .meta { padding: 10px 12px; display: grid; gap: 8px; }
+.img-card .meta b { font-size: 12.5px; color: var(--ink); word-break: break-word; }
+/* lists */
+.item { background: #fff; border: 1px solid var(--line); padding: 16px; }
+.item-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.item-head h3 { font-size: 18px; }
+.picker { display: flex; align-items: center; gap: 10px; }
+.picker .thumb { width: 64px; height: 48px; background: var(--sand) center / cover no-repeat; border: 1px solid var(--line); flex: none; display: grid; place-items: center; font: 700 10px/1 var(--f-body); color: var(--muted); }
+.picker input { flex: 1; }
+/* table */
+.table-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px/1.2 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: #FBFAF7; position: sticky; top: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: #FBFAF7; }
+td input, td select { padding: 7px 8px; }
+/* media */
+.media { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.mfile { background: #fff; border: 1px solid var(--line); display: flex; flex-direction: column; }
+.mfile .ph { aspect-ratio: 4 / 3; background: var(--sand) center / contain no-repeat; display: grid; place-items: center; font: 700 13px/1 var(--f-body); color: var(--muted); }
+.mfile .meta { padding: 8px 10px; font-size: 12px; display: grid; gap: 6px; }
+.mfile .meta b { word-break: break-all; font-weight: 600; color: var(--ink); font-size: 11.5px; }
+/* dialogs and drawer */
+dialog { border: 0; padding: 0; width: min(760px, calc(100% - 32px)); max-height: calc(100vh - 48px); box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .55); }
+dialog::backdrop { background: rgba(19, 43, 45, .55); }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: #fff; z-index: 1; }
+.dlg-head h2 { font-size: 22px; }
+.dlg-body { padding: 18px 20px; }
+.dlg-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); background: #FBFAF7; position: sticky; bottom: 0; }
+.mapbox { position: relative; background: #738579; cursor: crosshair; }
+.mapbox svg { display: block; width: 100%; height: auto; }
+.mapbox .pin { position: absolute; width: 18px; height: 18px; margin: -18px 0 0 -9px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--terra); border: 2px solid #fff; pointer-events: none; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 30px); opacity: 0; z-index: 100; background: var(--ink); color: #fff; padding: 12px 18px; font-weight: 600; font-size: 13px; transition: opacity .25s, transform .3s; max-width: calc(100% - 32px); box-shadow: 0 20px 40px -20px rgba(0, 0, 0, .5); }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.toast.bad { background: var(--bad); }
+.loading { display: grid; place-items: center; min-height: 60vh; color: var(--muted); }
+.spinner { width: 28px; height: 28px; border: 3px solid var(--sand); border-top-color: var(--terra); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.progress { height: 4px; background: var(--sand); margin-top: 8px; } .progress i { display: block; height: 100%; width: 0; background: var(--terra); transition: width .2s; }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { position: fixed; inset: 0 auto 0 0; width: 270px; z-index: 20; transform: translateX(-100%); transition: transform .3s; }
+  .side.open { transform: none; box-shadow: 0 0 60px rgba(0, 0, 0, .4); }
+  .menu-btn { display: inline-flex; }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .content { padding: 22px 16px 80px; }
+  .bar { padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading"><div><div class="spinner"></div>Loading the Falcon Manor CMS…</div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg"></dialog>
+<iframe id="harvest" title="Site content loader" hidden></iframe>
+
+<script type="module">
+// Falcon Manor CMS. Talks to /api/admin; content edits stay in a local draft until Publish.
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const fmtDate = (ts) => ts ? new Date(ts).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+const PAGES = [['home', 'Home'], ['community', 'Community'], ['homes', 'Homes'], ['lifestyle', 'Lifestyle'], ['relocation', 'Relocation'], ['schools', 'Schools'], ['news', 'News'], ['hoa', 'HOA & Tax Rates'], ['residents', 'Residents'], ['realtors', 'Realtors'], ['contact', 'Contact'], ['footer', 'Footer'], ['site', 'Site-wide']];
+const SOCIALS = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['x', 'X (Twitter)'], ['linkedin', 'LinkedIn']];
+const WORK_KEY = 'fm-cms-work', PREVIEW_KEY = 'fm-cms-draft';
+const S = { status: null, authed: false, published: null, versions: [], draft: null, H: null, leads: null, media: null, view: 'dashboard', page: 'home', q: '', faqCat: 'all', leadFilter: 'all', leadQ: '' };
+
+// ---------- helpers ----------
+let toastT;
+function toast(msg, bad) { const t = $('#toast'); t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3200); }
+async function api(action, opts = {}) {
+  const r = await fetch('/api/admin?a=' + action + (opts.query || ''), { method: opts.body ? 'POST' : 'GET', headers: opts.body ? { 'Content-Type': 'application/json' } : {}, body: opts.body ? JSON.stringify(opts.body) : undefined, credentials: 'same-origin' });
+  let d = {}; try { d = await r.json(); } catch (e) {}
+  if (r.status === 401 && action !== 'login') { S.authed = false; render(); throw new Error(d.error || 'Please sign in again.'); }
+  if (!r.ok) throw new Error(d.error || ('Request failed (' + r.status + ')'));
+  return d;
+}
+const isDirty = () => JSON.stringify(S.draft || {}) !== JSON.stringify(normalize(S.published));
+function normalize(c) { const o = clone(c || {}); delete o._meta; return o; }
+function touch() { try { localStorage.setItem(WORK_KEY, JSON.stringify({ base: S.published && S.published._meta ? S.published._meta.savedAt : 0, draft: S.draft })); } catch (e) {} renderBar(); }
+function dflt(key) { return S.H ? S.H.defaults[key] : undefined; }
+// Collections start from the site's built-in content until first edited
+function list(key) { const v = S.draft[key]; return Array.isArray(v) && v.length ? v : clone(dflt(key) || []); }
+function setList(key, arr) { S.draft[key] = arr; touch(); }
+function settings() { return Object.assign({ avaniUrl: '', phone: '', email: '', office: '', hours: '', ribbonText: '', ribbonHide: false, brochurePdf: '', brochurePages: [], mapboxToken: '', schoolsVideo: '' }, S.draft.settings || {}); }
+// Homesites: only edited rows are stored; everything else stays 'Available, coming soon'
+const LOT_ST = [['coming', 'Available · coming soon'], ['available', 'Available'], ['reserved', 'Reserved'], ['sold', 'Sold'], ['model', 'Model home'], ['hold', 'On hold']];
+const LOT_STYLES = ['Modern Farmhouse', 'Texas Hill Country', 'French Country', 'Modern Prairie', 'Traditional', 'Mediterranean', 'Contemporary'];
+const lotDefault = (id) => (((S.H && S.H.defaults.lots) || []).find((x) => x.id === id) || {}).st || 'coming';
+function lotOf(id) { return Object.assign({ id, status: lotDefault(id), builder: '', price: '', note: '', phase: 0, style: '', beds: 0, avail: 'coming' }, (S.draft.lots || []).find((l) => l.id === id) || {}); }
+function setLot(id, f, v) { const o = lotOf(id); o[f] = f === 'phase' || f === 'beds' ? +v || 0 : v; const L = (S.draft.lots || []).filter((l) => l.id !== id); if (o.status !== lotDefault(id) || o.builder || o.price || o.note || o.phase || o.style || o.beds || o.avail === 'ready') L.push(o); S.draft.lots = L; touch(); }
+function setSetting(k, v) { S.draft.settings = Object.assign(settings(), { [k]: v }); touch(); }
+
+// ---------- boot ----------
+async function boot() {
+  try { const s = await api('session'); S.status = s.configured; S.authed = s.authed; } catch (e) { S.status = null; }
+  if (S.authed) await loadAll(); else render();
+}
+async function loadAll() {
+  render('Loading content…');
+  try {
+    const [c] = await Promise.all([api('content'), harvest()]);
+    S.published = c.content; S.versions = c.versions;
+    S.draft = normalize(c.content);
+    try { const w = JSON.parse(localStorage.getItem(WORK_KEY) || 'null'); const base = S.published && S.published._meta ? S.published._meta.savedAt : 0; if (w && w.draft && w.base === base && JSON.stringify(w.draft) !== JSON.stringify(S.draft)) { S.draft = w.draft; setTimeout(() => toast('Restored your unsaved changes from last time.'), 400); } } catch (e) {}
+    api('leads').then((d) => { S.leads = d.leads; renderSide(); if (S.view === 'dashboard' || S.view === 'leads') renderView(); }).catch(() => {});
+    render();
+  } catch (e) { render(); toast(e.message, true); }
+}
+// The site's own editable text, images and built-in collections, read from the page itself
+function harvest() {
+  if (S.H) return Promise.resolve(S.H);
+  return new Promise((ok, fail) => {
+    const f = $('#harvest'), t0 = Date.now();
+    f.src = '/?cms-harvest=1&t=' + Date.now();
+    (function poll() {
+      try { const h = f.contentWindow && f.contentWindow.FM_HARVEST; if (h) { S.H = JSON.parse(JSON.stringify(h)); f.src = 'about:blank'; return ok(S.H); } } catch (e) {}
+      if (Date.now() - t0 > 25000) return fail(new Error('Could not read the site content. Reload to try again.'));
+      setTimeout(poll, 250);
+    })();
+  });
+}
+
+// ---------- rendering ----------
+const NAV = [
+  ['Overview', [['dashboard', 'Dashboard']]],
+  ['Website content', [['texts', 'Pages & text'], ['images', 'Images'], ['builders', 'Meet our builders'], ['news', 'News & updates'], ['videos', 'Videos'], ['faq', 'FAQ'], ['places', 'Area map places'], ['lots', 'Homesites'], ['owners', 'HOA & taxes'], ['more', 'Additional information']]],
+  ['Settings', [['contact', 'Contact & social'], ['settings', 'Site settings']]],
+  ['Manage', [['leads', 'Registrations'], ['media', 'Media library'], ['history', 'History']]]
+];
+function render(loadingMsg) {
+  const app = $('#app');
+  if (!S.status) { app.innerHTML = gate('<h1>Unavailable</h1><p>The admin service could not be reached. Check the deployment and reload.</p>'); return; }
+  if (!S.status.password || !S.status.store) { app.innerHTML = setupGate(); return; }
+  if (!S.authed) { app.innerHTML = gate('<h1>Sign in</h1><p>Falcon Manor content management</p><form id="login"><label class="field"><span>Password</span><input type="password" name="password" autocomplete="current-password" required autofocus></label><button class="btn primary" type="submit" style="width:100%">Sign in</button><p id="login-err" style="color:var(--bad);margin:12px 0 0" hidden></p></form>'); return; }
+  if (loadingMsg || !S.draft) { app.innerHTML = '<div class="loading"><div><div class="spinner"></div>' + esc(loadingMsg || 'Loading…') + '</div></div>'; return; }
+  app.innerHTML = '<div class="shell"><aside class="side" id="side"></aside><div class="main"><div class="bar" id="bar"></div><div class="content" id="view"></div></div></div>';
+  renderSide(); renderBar(); renderView();
+}
+function gate(inner) { return '<div class="gate"><div class="gate-card"><div class="mark"><img src="/favicon.svg" alt=""><b>FALCON MANOR</b></div>' + inner + '</div></div>'; }
+function setupGate() {
+  const st = S.status, li = (ok, t) => '<li>' + (ok ? '<span class="chip ok">Done</span> ' : '<span class="chip warn">To do</span> ') + t + '</li>';
+  return gate('<h1>Finish setup</h1><p>Two settings in the Vercel project turn the CMS on. Then redeploy.</p><ol>' +
+    li(st.store, 'Storage: in Vercel, open the project, then <b>Storage</b>, create a <b>Blob</b> store and connect it to this project.') +
+    li(st.password, 'Password: in <b>Settings → Environment Variables</b>, add <code>ADMIN_PASSWORD</code>.') +
+    li(st.secret, 'Recommended: add <code>ADMIN_SECRET</code>, a long random value that protects sessions and registrations.') + '</ol>');
+}
+function renderSide() {
+  const side = $('#side'); if (!side) return;
+  const newLeads = (S.leads || []).filter((l) => l.status === 'new').length;
+  side.innerHTML = '<a class="brand" href="/" target="_blank" rel="noopener"><img src="/favicon.svg" alt=""><span><b>FALCON MANOR</b><small>CONTENT MANAGER</small></span></a>' +
+    NAV.map(([h, items]) => '<h4>' + h + '</h4>' + items.map(([k, label]) => '<button type="button" data-nav="' + k + '"' + (S.view === k ? ' aria-current="page"' : '') + '><span>' + label + '</span>' + (k === 'leads' && newLeads ? '<span class="count">' + newLeads + '</span>' : '') + '</button>').join('')).join('') +
+    '<div class="grow"></div><button type="button" data-act="logout"><span>Sign out</span></button>';
+}
+function renderBar() {
+  const bar = $('#bar'); if (!bar) return;
+  const dirty = isDirty(), m = S.published && S.published._meta;
+  bar.innerHTML = '<button class="btn sm menu-btn" type="button" data-act="menu" aria-label="Open the menu">Menu</button><div class="state' + (dirty ? ' dirty' : '') + '"><span class="dot"></span>' + (dirty ? 'Unsaved changes' : (m ? 'Published ' + fmtDate(m.savedAt) : 'Showing the built-in site content')) + '</div>' +
+    '<a class="btn sm" href="/" target="_blank" rel="noopener">View site</a><button class="btn sm" type="button" data-act="preview">Preview changes</button>' +
+    '<button class="btn sm danger" type="button" data-act="discard"' + (dirty ? '' : ' disabled') + '>Discard</button><button class="btn sm primary" type="button" data-act="publish"' + (dirty ? '' : ' disabled') + '>Publish</button>';
+}
+function head(title, sub, actions) { return '<div class="head"><div><h1>' + title + '</h1>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>' + (actions ? '<div class="row">' + actions + '</div>' : '') + '</div>'; }
+function renderView() {
+  const v = $('#view'); if (!v) return;
+  const fn = VIEWS[S.view] || VIEWS.dashboard;
+  v.innerHTML = fn();
+  window.scrollTo(0, 0);
+  $$('textarea', v).forEach(autosize);
+  if (S.view === 'history') fillNotes();
+}
+// Notes live inside each version file, so the most recent ones are read when History opens
+const NOTES = {};
+async function fillNotes() {
+  const live = S.versions[0], m = S.published && S.published._meta;
+  if (live && m) NOTES[live.pathname] = m.note || '';
+  for (const v of S.versions.slice(0, 12)) {
+    if (!(v.pathname in NOTES)) { try { const r = await api('version', { query: '&p=' + encodeURIComponent(v.pathname) }); NOTES[v.pathname] = (r.content && r.content._meta && r.content._meta.note) || ''; } catch (e) { NOTES[v.pathname] = ''; } }
+    if (S.view !== 'history') return;
+    const td = $$('.ver-note').find((x) => x.dataset.p === v.pathname); if (td) td.textContent = NOTES[v.pathname] || '—';
+  }
+}
+function autosize(t) { t.style.height = 'auto'; t.style.height = Math.min(600, t.scrollHeight + 2) + 'px'; }
+
+const VIEWS = {
+  dashboard() {
+    const st = S.status, m = S.published && S.published._meta, leads = S.leads || [], fresh = leads.filter((l) => l.status === 'new').length;
+    return head('Dashboard', 'Manage the Falcon Manor website. Edit content in any section, preview it, then publish.') +
+      '<div class="stats">' +
+      '<div class="card stat"><h3>Website content</h3><b>' + (m ? fmtDate(m.savedAt) : 'Built-in') + '</b><p>' + (m ? 'Last published' + (m.note ? ': ' + esc(m.note) : '') : 'Nothing has been published from the CMS yet.') + '</p><button class="btn sm" data-nav="history">View history</button></div>' +
+      '<div class="card stat"><h3>Registrations</h3><b>' + (S.leads ? leads.length : '…') + '</b><p>' + fresh + ' new</p><button class="btn sm" data-nav="leads">Open registrations</button></div>' +
+      '<div class="card stat"><h3>Storage</h3><b>' + (st.blob ? 'Vercel Blob' : 'Local folder') + '</b><p>' + (st.blob ? 'Connected' : 'Development mode') + '</p><button class="btn sm" data-nav="media">Media library</button></div>' +
+      '<div class="card stat"><h3>AI concierge</h3><b>' + (st.ai ? 'Claude on' : 'Built-in answers') + '</b><p>' + (st.ai ? 'Answers from the approved FAQ in this CMS.' : 'Add ANTHROPIC_API_KEY in Vercel to switch Claude on.') + '</p><button class="btn sm" data-nav="faq">Edit the FAQ</button></div>' +
+      '</div>' +
+      (st.secret ? '' : '<div class="hint">Recommended: add an <b>ADMIN_SECRET</b> environment variable in Vercel (a long random value). It protects sign-in sessions and the stored registrations.</div>') +
+      '<div class="card"><h2 style="font-size:22px;margin-bottom:12px">Quick actions</h2><div class="row"><button class="btn" data-nav="texts">Edit page text</button><button class="btn" data-act="news-add">Add a news story</button><button class="btn" data-nav="builders">Meet our builders</button><button class="btn" data-nav="contact">Contact & social links</button><button class="btn" data-nav="images">Replace images</button></div></div>';
+  },
+  texts() {
+    const items = (S.H.editables || []).filter((e) => e.view === S.page && (!S.q || (e.text + ' ' + (S.draft.texts || {})[e.key] || '').toLowerCase().includes(S.q.toLowerCase())));
+    const T = S.draft.texts || {};
+    return head('Pages & text', 'Headings, introductions and labels on every page. Changed items are marked.') +
+      '<div class="hint">Write *word* for <em>italic</em> and **word** for <strong>bold</strong>. Leave a box unchanged to keep the original text.</div>' +
+      '<div class="tabs">' + PAGES.map(([k, l]) => '<button type="button" data-page="' + k + '" aria-pressed="' + (S.page === k) + '">' + l + '</button>').join('') + '</div>' +
+      '<div class="field"><input type="search" id="tx-q" placeholder="Search text on this page" value="' + esc(S.q) + '"></div>' +
+      '<div class="stack">' + (items.length ? items.map((e) => { const cur = T[e.key] != null ? T[e.key] : e.text, ch = T[e.key] != null && T[e.key] !== e.text; return '<div class="tx' + (ch ? ' changed' : '') + '"><div class="tx-top"><span>' + esc(e.section || 'Page') + ' · ' + esc(e.tag) + '</span>' + (ch ? '<button class="link" data-act="tx-reset" data-key="' + esc(e.key) + '">Reset to original</button>' : '') + '</div><textarea data-tx="' + esc(e.key) + '" aria-label="' + esc((e.section || 'Page') + ' ' + e.tag) + '">' + esc(cur) + '</textarea></div>'; }).join('') : '<div class="empty">No text found' + (S.q ? ' for “' + esc(S.q) + '”' : '') + '.</div>') + '</div>';
+  },
+  images() {
+    const I = S.draft.images || {};
+    const byPage = {}; (S.H.images || []).forEach((im) => { (byPage[im.view] = byPage[im.view] || []).push(im); });
+    return head('Images', 'Replace any photo on the site. The new image is used everywhere the original appeared.') +
+      PAGES.filter(([k]) => byPage[k]).map(([k, l]) => '<h2 style="font-size:22px;margin:22px 0 12px">' + l + '</h2><div class="imgs">' + byPage[k].map((im) => { const o = I[im.key], src = o || im.src; return '<div class="img-card"><div class="ph" style="background-image:url(\'' + esc(src) + '\')">' + (o ? '<span class="chip new">Replaced</span>' : '') + '</div><div class="meta"><b>' + esc(im.alt || im.key) + '</b><span class="muted" style="font-size:11.5px">' + (im.count > 1 ? 'Used ' + im.count + ' times' : 'Used once') + '</span><div class="row"><button class="btn sm" data-act="img-pick" data-key="' + esc(im.key) + '">Replace</button>' + (o ? '<button class="btn sm" data-act="img-reset" data-key="' + esc(im.key) + '">Use original</button>' : '') + '</div></div></div>'; }).join('') + '</div>').join('');
+  },
+  builders() {
+    const L = list('meet');
+    return head('Meet our builders', 'The builder cards on the home page. Builder pages and details stay on the Homes page.', '<button class="btn primary" data-act="mb-add">Add a builder</button>') +
+      '<div class="stack">' + L.map((b, i) => '<div class="item"><div class="item-head"><h3>' + esc(b.name || 'New builder') + '</h3><div class="row"><button class="btn sm" data-act="mb-move" data-i="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + '>Move up</button><button class="btn sm" data-act="mb-move" data-i="' + i + '" data-d="1"' + (i < L.length - 1 ? '' : ' disabled') + '>Move down</button><button class="btn sm danger" data-act="mb-del" data-i="' + i + '">Remove</button></div></div>' +
+        '<div class="grid2"><label class="field"><span>Builder name</span><input type="text" data-mb="' + i + '" data-f="name" value="' + esc(b.name) + '"></label><label class="field"><span>Website</span><input type="url" data-mb="' + i + '" data-f="url" value="' + esc(b.url) + '" placeholder="https://"></label></div>' +
+        '<label class="field"><span>Headline</span><input type="text" data-mb="' + i + '" data-f="title" value="' + esc(b.title) + '"></label><label class="field"><span>Description</span><textarea data-mb="' + i + '" data-f="text">' + esc(b.text) + '</textarea></label>' +
+        '<div class="field"><span>Logo (optional)</span>' + pickerHtml('mb', i, 'logo', b.logo) + '<small>Shown on a white panel on the card. Empty keeps the built-in logo for Chesmar, Autograph and Avani Homes; other builders show their name.</small></div></div>').join('') + '</div>';
+  },
+  news() {
+    const L = list('news');
+    return head('News & updates', 'Announcements and stories for the home, News and Residents pages. Use the Announcements category for notices. Drafts stay hidden until you mark them published.', '<button class="btn primary" data-act="news-add">Add a story</button>') +
+      '<div class="stack">' + (L.length ? L.map((n, i) => '<div class="item"><div class="item-head"><div><span class="chip ' + (n.status === 'draft' ? 'warn' : 'ok') + '">' + (n.status === 'draft' ? 'Draft' : 'Published') + '</span> <span class="chip">' + esc(n.cat) + '</span><h3 style="margin-top:8px">' + esc(n.t) + '</h3></div><div class="row"><button class="btn sm" data-act="news-edit" data-i="' + i + '">Edit</button><button class="btn sm" data-act="news-move" data-i="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + '>Up</button><button class="btn sm" data-act="news-move" data-i="' + i + '" data-d="1"' + (i < L.length - 1 ? '' : ' disabled') + '>Down</button><button class="btn sm danger" data-act="news-del" data-i="' + i + '">Delete</button></div></div><p class="muted" style="margin:0">' + esc(n.d) + '</p></div>').join('') : '<div class="empty">No stories yet.</div>') + '</div>';
+  },
+  videos() {
+    const L = list('videos');
+    return head('Videos', 'The video corners on the Schools, News and Lifestyle pages. A video without a link shows as “Coming soon” with its cover photo.', '<button class="btn primary" data-act="vid-add">Add a video</button>') +
+      '<div class="stack">' + (L.length ? L.map((v, i) => '<div class="item"><div class="item-head"><div class="row"><select data-vid="' + i + '" data-f="page" aria-label="Page"><option value="schools">Schools page</option><option value="news"' + (v.page === 'news' ? ' selected' : '') + '>News page</option><option value="lifestyle"' + (v.page === 'lifestyle' ? ' selected' : '') + '>Lifestyle page</option></select><span class="chip ' + (v.url ? 'ok' : 'warn') + '">' + (v.url ? 'Has a video' : 'Coming soon') + '</span></div>' +
+        '<div class="row"><button class="btn sm" data-act="vid-move" data-i="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + '>Up</button><button class="btn sm" data-act="vid-move" data-i="' + i + '" data-d="1"' + (i < L.length - 1 ? '' : ' disabled') + '>Down</button><button class="btn sm danger" data-act="vid-del" data-i="' + i + '">Delete</button></div></div>' +
+        '<label class="field"><span>Title</span><input type="text" data-vid="' + i + '" data-f="t" value="' + esc(v.t) + '"></label><label class="field"><span>Description</span><textarea data-vid="' + i + '" data-f="d" rows="2">' + esc(v.d) + '</textarea></label>' +
+        '<label class="field"><span>Video link</span><input type="url" data-vid="' + i + '" data-f="url" value="' + esc(v.url || '') + '" placeholder="https://www.youtube.com/watch?v=…" spellcheck="false"><small>YouTube, Vimeo or an https link to an .mp4 file. Empty shows “Coming soon”.</small></label>' +
+        '<div class="field" style="margin:0"><span>Cover image</span>' + pickerHtml('vid', i, 'img', /^(https:|\/__local\/)/.test(v.img || '') ? v.img : '') + '<small>Empty keeps the built-in photo.</small></div></div>').join('') : '<div class="empty">No videos yet.</div>') + '</div>';
+  },
+  faq() {
+    const L = list('faq'), cats = S.H.defaults.cats;
+    return head('FAQ', 'Approved questions and answers. The AI concierge answers only from these.', '<button class="btn primary" data-act="faq-add">Add a question</button>') +
+      '<div class="tabs"><button type="button" data-faqcat="all" aria-pressed="' + (S.faqCat === 'all') + '">All (' + L.length + ')</button>' + cats.map((c, k) => '<button type="button" data-faqcat="' + k + '" aria-pressed="' + (String(S.faqCat) === String(k)) + '">' + esc(c) + '</button>').join('') + '</div>' +
+      '<div class="stack">' + L.map((f, i) => (S.faqCat === 'all' || String(f[0]) === String(S.faqCat)) ? '<div class="item"><div class="item-head"><span class="chip">Question ' + (i + 1) + '</span><div class="row"><select data-faq="' + i + '" data-f="0" aria-label="Category">' + cats.map((c, k) => '<option value="' + k + '"' + (k === f[0] ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select><button class="btn sm" data-act="faq-move" data-i="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + '>Up</button><button class="btn sm" data-act="faq-move" data-i="' + i + '" data-d="1"' + (i < L.length - 1 ? '' : ' disabled') + '>Down</button><button class="btn sm danger" data-act="faq-del" data-i="' + i + '">Delete</button></div></div><label class="field"><span>Question</span><input type="text" data-faq="' + i + '" data-f="1" value="' + esc(f[1]) + '"></label><label class="field" style="margin:0"><span>Answer</span><textarea data-faq="' + i + '" data-f="2">' + esc(f[2]) + '</textarea></label></div>' : '').join('') + '</div>';
+  },
+  places() {
+    const L = list('places'), cats = Object.keys(S.H.defaults.mapcat);
+    return head('Area map places', 'Places shown on the Relocation area map. Positions are approximate.', '<button class="btn primary" data-act="pl-add">Add a place</button>') +
+      '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Category</th><th>Note</th><th>Position</th><th></th></tr></thead><tbody>' + L.map((p, i) => '<tr><td><input type="text" data-pl="' + i + '" data-f="0" value="' + esc(p[0]) + '" aria-label="Name"></td><td><select data-pl="' + i + '" data-f="1" aria-label="Category">' + cats.map((c) => '<option' + (c === p[1] ? ' selected' : '') + '>' + esc(c) + '</option>').join('') + '</select></td><td><input type="text" data-pl="' + i + '" data-f="4" value="' + esc(p[4] || '') + '" aria-label="Note"></td><td><button class="btn sm" data-act="pl-pick" data-i="' + i + '">Set on map</button> <span class="muted" style="font-size:11.5px">' + Math.round(p[2]) + ', ' + Math.round(p[3]) + '</span></td><td><button class="btn sm danger" data-act="pl-del" data-i="' + i + '">Delete</button></td></tr>').join('') + '</tbody></table></div>';
+  },
+  lots() {
+    const D = (S.H.defaults.lots || []);
+    const row = (d) => { const o = lotOf(d.id); return '<tr><td><b>' + esc(d.t) + '</b><br><span class="muted" style="font-size:12px">' + (d.s ? 'Section ' + d.s : 'Conceptual') + '</span></td><td style="white-space:nowrap">' + d.a.toFixed(2) + ' ac</td>' +
+      '<td><select data-lot="' + d.id + '" data-f="status" aria-label="Status">' + LOT_ST.map(([k, l]) => '<option value="' + k + '"' + (o.status === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></td>' +
+      '<td><select data-lot="' + d.id + '" data-f="builder" aria-label="Builder"><option value="">To be announced</option><option value="chesmar"' + (o.builder === 'chesmar' ? ' selected' : '') + '>Chesmar Homes</option><option value="autograph"' + (o.builder === 'autograph' ? ' selected' : '') + '>Autograph Homes</option><option value="avani"' + (o.builder === 'avani' ? ' selected' : '') + '>Avani Homes</option></select></td>' +
+      '<td><select data-lot="' + d.id + '" data-f="phase" aria-label="Phase"><option value="0">' + (d.s ? 'Phase I' : 'Phase II') + ' (default)</option>' + [[1, 'Phase I'], [2, 'Phase II'], [3, 'Phase III']].map(([k, l]) => '<option value="' + k + '"' + (o.phase === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></td>' +
+      '<td><select data-lot="' + d.id + '" data-f="style" aria-label="Architecture"><option value="">Not listed</option>' + LOT_STYLES.map((k) => '<option' + (o.style === k ? ' selected' : '') + '>' + k + '</option>').join('') + '</select></td>' +
+      '<td><select data-lot="' + d.id + '" data-f="beds" aria-label="Bedrooms"><option value="0">Not listed</option>' + [2, 3, 4, 5, 6, 7, 8].map((k) => '<option value="' + k + '"' + (o.beds === k ? ' selected' : '') + '>' + k + '</option>').join('') + '</select></td>' +
+      '<td><select data-lot="' + d.id + '" data-f="avail" aria-label="Availability"><option value="coming">Coming soon</option><option value="ready"' + (o.avail === 'ready' ? ' selected' : '') + '>Move-in ready</option></select></td>' +
+      '<td><input type="text" data-lot="' + d.id + '" data-f="price" value="' + esc(o.price) + '" placeholder="To be announced" aria-label="Price"></td>' +
+      '<td><input type="text" data-lot="' + d.id + '" data-f="note" value="' + esc(o.note) + '" placeholder="Optional note" aria-label="Note"></td></tr>'; };
+    return head('Homesites', 'Status, phase, builder, home style, availability and price for every homesite on the site map. Section 1 lots come from the plat and default to Phase I, the current phase; F lots are conceptual and default to Phase II, the future phase. Architecture, bedrooms and availability drive the site’s home search. Unchanged homesites show “Available · coming soon”.') +
+      (D.length ? '<div class="table-wrap"><table><thead><tr><th>Homesite</th><th>Size</th><th>Status</th><th>Builder</th><th>Phase</th><th>Architecture</th><th>Bedrooms</th><th>Availability</th><th>Price</th><th>Note</th></tr></thead><tbody>' + D.map(row).join('') + '</tbody></table></div>' : '<div class="card"><p class="muted" style="margin:0">The homesite list couldn’t load from the site. Reload this page.</p></div>');
+  },
+  owners() {
+    const d = S.H.defaults;
+    return head('HOA & taxes', 'The two summary cards on the Community page. The full figures are on the HOA & Tax Rates page; edit them under Pages & text.') +
+      '<div class="grid2"><label class="field card"><span>Homeowners association</span><textarea data-key1="hoa" rows="6">' + esc(S.draft.hoa || d.hoa) + '</textarea><small>Keep this in step with the HOA & Tax Rates page.</small></label><label class="field card"><span>Property taxes</span><textarea data-key1="taxes" rows="6">' + esc(S.draft.taxes || d.taxes) + '</textarea><small>Leave as is until tax details are approved.</small></label></div>';
+  },
+  more() {
+    const m = S.draft.more || {};
+    return head('Additional information', 'An optional section on the home page, with its own item in the Home menu. It appears only when it has a title or text.') +
+      '<div class="card"><label class="field"><span>Title</span><input type="text" data-more="title" value="' + esc(m.title) + '"></label><label class="field" style="margin:0"><span>Text</span><textarea data-more="body" rows="8">' + esc(m.body) + '</textarea><small>Separate paragraphs with a blank line.</small></label></div>';
+  },
+  contact() {
+    const s = settings(), so = S.draft.social || {};
+    return head('Contact & social', 'Sales contact details, social media links and the Avani Communities website.') +
+      '<div class="grid2"><div class="card"><h2 style="font-size:20px;margin-bottom:12px">Sales contact</h2><label class="field"><span>Phone</span><input type="tel" data-set="phone" value="' + esc(s.phone) + '"></label><label class="field"><span>Email</span><input type="email" data-set="email" value="' + esc(s.email) + '"></label><label class="field"><span>Sales office address</span><textarea data-set="office" rows="2">' + esc(s.office) + '</textarea></label><label class="field" style="margin:0"><span>Hours</span><input type="text" data-set="hours" value="' + esc(s.hours) + '" placeholder="e.g. By appointment"></label><p class="muted" style="font-size:12px;margin:10px 0 0">Shown on the Contact page once filled in.</p></div>' +
+      '<div class="card"><h2 style="font-size:20px;margin-bottom:12px">Social media</h2>' + SOCIALS.map(([k, l]) => '<label class="field"><span>' + l + '</span><input type="url" data-social="' + k + '" value="' + esc(so[k] || '') + '" placeholder="https://"></label>').join('') + '<p class="muted" style="font-size:12px;margin:0">Empty links show a “coming soon” note on the site.</p></div></div>' +
+      '<div class="card" style="margin-top:14px"><label class="field" style="margin:0"><span>Avani Communities website</span><input type="url" data-set="avaniUrl" value="' + esc(s.avaniUrl || S.H.defaults.settings.avaniUrl) + '" placeholder="https://"><small>Every Avani logo on the site links here.</small></label></div>';
+  },
+  settings() {
+    const s = settings(), pages = s.brochurePages || [];
+    return head('Site settings', 'The notice ribbon at the top of the site, the community brochure and the Schools video.') +
+      '<div class="card"><h2 style="font-size:20px;margin-bottom:12px">Notice ribbon</h2><label class="field"><span>Text</span><textarea data-set="ribbonText" rows="2" placeholder="' + esc(S.H.defaults.settings.ribbonText) + '">' + esc(s.ribbonText) + '</textarea><small>Leave empty to show no notice at the top of the site.</small></label><label class="row" style="margin:0"><input type="checkbox" data-set="ribbonHide"' + (s.ribbonHide ? ' checked' : '') + '> Hide the ribbon</label></div>' +
+      '<div class="card" style="margin-top:14px"><h2 style="font-size:20px;margin-bottom:12px">Community brochure</h2><div class="field"><span>Brochure PDF</span>' + pickerHtml('set', 0, 'brochurePdf', s.brochurePdf, 'pdf') + '<small>The file behind every “Download PDF” button. Empty uses the built-in brochure.</small></div>' +
+      '<div class="field" style="margin:0"><span>Flipbook pages (optional, 6 images)</span><div class="stack">' + [0, 1, 2, 3, 4, 5].map((k) => '<div class="row" style="flex-wrap:nowrap"><span class="muted" style="width:56px">Page ' + (k + 1) + '</span>' + pickerHtml('bp', k, 'page', pages[k] || '') + '</div>').join('') + '</div><small>Replace all six together so the flipbook matches the PDF.</small></div></div>' +
+      '<div class="card" style="margin-top:14px"><h2 style="font-size:20px;margin-bottom:12px">Schools video</h2><label class="field" style="margin:0"><span>Video link</span><input type="url" data-set="schoolsVideo" value="' + esc(s.schoolsVideo) + '" placeholder="https://www.youtube.com/watch?v=…" spellcheck="false"><small>Optional. A YouTube or Vimeo link, or an https link to an .mp4 file. It plays in the photo at the top of the Schools page when a visitor presses play. Leave empty to show the photo.</small></label></div>' +
+      '<div class="card" style="margin-top:14px"><h2 style="font-size:20px;margin-bottom:12px">Site map</h2><label class="field" style="margin:0"><span>Mapbox access token</span><input type="text" data-set="mapboxToken" value="' + esc(s.mapboxToken) + '" placeholder="pk.…" autocomplete="off" spellcheck="false"><small>Optional. A public Mapbox token (it starts with pk.) adds the satellite layer to the site map. Create it in a free Mapbox account and restrict it to the Falcon Manor domain. Without it the map uses free street tiles.</small></label></div>';
+  },
+  leads() {
+    if (!S.leads) return head('Registrations', '') + '<div class="loading"><div><div class="spinner"></div>Loading registrations…</div></div>';
+    const q = S.leadQ.toLowerCase(), rows = S.leads.filter((l) => (S.leadFilter === 'all' || l.status === S.leadFilter) && (!q || [l.first, l.last, l.email, l.phone, l.interest, l.zip].join(' ').toLowerCase().includes(q)));
+    const n = (k) => S.leads.filter((l) => k === 'all' || l.status === k).length;
+    return head('Registrations', 'Sign-ups from Register Your Interest and the update forms. Stored encrypted.', '<button class="btn" data-act="leads-refresh">Refresh</button><button class="btn dark" data-act="leads-csv"' + (S.leads.length ? '' : ' disabled') + '>Export CSV</button>') +
+      '<div class="row" style="margin-bottom:14px"><div class="tabs" style="margin:0">' + [['all', 'All'], ['new', 'New'], ['contacted', 'Contacted'], ['closed', 'Closed']].map(([k, l]) => '<button type="button" data-lf="' + k + '" aria-pressed="' + (S.leadFilter === k) + '">' + l + ' (' + n(k) + ')</button>').join('') + '</div><input type="search" id="lead-q" placeholder="Search name, email, ZIP" value="' + esc(S.leadQ) + '" style="max-width:280px"></div>' +
+      (rows.length ? '<div class="table-wrap"><table><thead><tr><th>Received</th><th>Name</th><th>Email</th><th>Phone</th><th>Interested in</th><th>Form</th><th>Status</th></tr></thead><tbody>' + rows.map((l) => '<tr data-act="lead-open" data-id="' + esc(l.id) + '"><td>' + esc(fmtDate(l.createdAt)) + '</td><td>' + esc([l.first, l.last].join(' ')) + '</td><td>' + esc(l.email) + '</td><td>' + esc(l.phone) + '</td><td>' + esc(l.interest) + '</td><td>' + esc(l.form) + '</td><td><span class="chip ' + ({ new: 'new', contacted: 'ok', closed: '', unreadable: 'bad' }[l.status] || '') + '">' + esc(l.status) + '</span></td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">' + (S.leads.length ? 'No registrations match.' : 'No registrations yet. They appear here when visitors register on the site.') + '</div>');
+  },
+  media() {
+    if (!S.media) { loadMedia(); return head('Media library', '') + '<div class="loading"><div><div class="spinner"></div>Loading files…</div></div>'; }
+    return head('Media library', 'Images and PDFs uploaded for the site.', '<label class="btn primary">Upload files<input type="file" id="media-up" accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf" multiple hidden></label>') +
+      '<div id="up-progress"></div>' + (S.media.length ? '<div class="media">' + S.media.map((f) => mediaCard(f, false)).join('') + '</div>' : '<div class="empty">No uploads yet.</div>');
+  },
+  history() {
+    return head('History', 'Every published version is kept. Restore one to make it the live version again (your current version stays in history).') +
+      (S.versions.length ? '<div class="table-wrap"><table><thead><tr><th>Published</th><th>Note</th><th>Size</th><th></th></tr></thead><tbody>' + S.versions.map((v, i) => '<tr><td>' + esc(fmtDate(v.ts)) + (i === 0 ? ' <span class="chip ok">Live</span>' : '') + '</td><td class="ver-note" data-p="' + esc(v.pathname) + '"></td><td>' + Math.round(v.size / 1024) + ' KB</td><td><div class="row"><button class="btn sm" data-act="ver-preview" data-p="' + esc(v.pathname) + '">Preview</button>' + (i ? '<button class="btn sm" data-act="ver-restore" data-p="' + esc(v.pathname) + '">Restore</button>' : '') + '</div></td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">Nothing published yet.</div>');
+  }
+};
+
+// ---------- media and uploads ----------
+function isImg(u) { return /\.(jpe?g|png|webp|svg)(\?|$)/i.test(u); }
+function fname(u) { return decodeURIComponent(String(u).split('/').pop().split('?')[0]); }
+function mediaCard(f, choose) {
+  return '<div class="mfile"><div class="ph"' + (isImg(f.url) ? ' style="background-image:url(\'' + esc(f.url) + '\')"' : '') + '>' + (isImg(f.url) ? '' : 'PDF') + '</div><div class="meta"><b>' + esc(fname(f.pathname || f.url)) + '</b><span class="muted">' + Math.max(1, Math.round((f.size || 0) / 1024)) + ' KB · ' + esc(new Date(f.uploadedAt).toLocaleDateString('en-US')) + '</span><div class="row">' +
+    (choose ? '<button class="btn sm primary" data-act="pick-choose" data-url="' + esc(f.url) + '">Choose</button>' : '<button class="btn sm" data-act="media-copy" data-url="' + esc(f.url) + '">Copy link</button><button class="btn sm danger" data-act="media-del" data-url="' + esc(f.url) + '">Delete</button>') + '</div></div></div>';
+}
+async function loadMedia() { try { S.media = (await api('media')).files; } catch (e) { S.media = []; toast(e.message, true); } if (['media'].includes(S.view)) renderView(); return S.media; }
+let blobClient = null;
+async function uploadOne(file, onProgress) {
+  const safe = file.name.toLowerCase().replace(/[^a-z0-9.\-_]+/g, '-').replace(/^-+/, '').slice(-80) || 'file';
+  if (S.status.blob) {
+    blobClient = blobClient || await import('https://esm.sh/@vercel/blob@2.8.2/client');
+    const r = await blobClient.upload('media/' + safe, file, { access: 'public', handleUploadUrl: '/api/admin?a=upload', multipart: file.size > 8 * 1024 * 1024, onUploadProgress: (p) => onProgress && onProgress(p.percentage) });
+    return { url: r.url, pathname: r.pathname, size: file.size, uploadedAt: Date.now() };
+  }
+  const r = await fetch('/api/admin?a=upload-local&name=' + encodeURIComponent(safe), { method: 'PUT', headers: { 'Content-Type': file.type }, body: file, credentials: 'same-origin' });
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Upload failed');
+  onProgress && onProgress(100);
+  return { url: d.url, pathname: d.pathname, size: file.size, uploadedAt: Date.now() };
+}
+async function uploadFiles(files, box) {
+  const done = [];
+  for (const f of files) {
+    if (!/^(image\/(jpeg|png|webp|svg\+xml)|application\/pdf)$/.test(f.type)) { toast(f.name + ': only JPG, PNG, WebP, SVG or PDF files.', true); continue; }
+    if (f.size > 25 * 1024 * 1024) { toast(f.name + ' is larger than 25 MB.', true); continue; }
+    if (box) box.innerHTML = '<div class="card"><b>Uploading ' + esc(f.name) + '</b><div class="progress"><i></i></div></div>';
+    try { done.push(await uploadOne(f, (p) => { const i = box && $('.progress i', box); if (i) i.style.width = p + '%'; })); } catch (e) { toast(f.name + ': ' + e.message, true); }
+  }
+  if (box) box.innerHTML = '';
+  if (done.length) { S.media = (S.media || []).length ? done.concat(S.media) : null; toast(done.length === 1 ? 'Uploaded.' : done.length + ' files uploaded.'); }
+  return done;
+}
+// A small field with a thumbnail, an editable link and buttons to choose or clear a file
+function pickerHtml(group, i, f, url, kind) {
+  return '<div class="picker"><span class="thumb"' + (url && isImg(url) ? ' style="background-image:url(\'' + esc(url) + '\')"' : '') + '>' + (url && !isImg(url) ? 'PDF' : '') + '</span><input type="text" data-pick="' + group + '" data-i="' + i + '" data-f="' + f + '" value="' + esc(url || '') + '" placeholder="' + (kind === 'pdf' ? 'Choose a PDF' : 'Choose an image') + '" aria-label="File link"><button class="btn sm" type="button" data-act="pick" data-group="' + group + '" data-i="' + i + '" data-f="' + f + '" data-kind="' + (kind || 'img') + '">Choose</button>' + (url ? '<button class="btn sm" type="button" data-act="pick-clear" data-group="' + group + '" data-i="' + i + '" data-f="' + f + '">Clear</button>' : '') + '</div>';
+}
+function setPicked(group, i, f, url) {
+  i = +i;
+  if (group === 'mb') { const L = list('meet'); L[i][f] = url; setList('meet', L); }
+  else if (group === 'news') { if (newsDraft) newsDraft[f] = url; }
+  else if (group === 'vid') { const L = list('videos'); L[i][f] = url; setList('videos', L); }
+  else if (group === 'set') setSetting(f, url);
+  else if (group === 'bp') { const s = settings(), p = (s.brochurePages || []).slice(); while (p.length < 6) p.push(''); p[i] = url; setSetting('brochurePages', p); }
+  else if (group === 'img') { S.draft.images = Object.assign({}, S.draft.images, { [f]: url }); touch(); }
+}
+let pickTarget = null;
+async function openPicker(target) {
+  pickTarget = target; dlgMode = 'picker';
+  const dlg = $('#dlg');
+  dlg.innerHTML = '<div class="dlg-head"><h2>Choose a file</h2><button class="btn sm" data-act="dlg-close">Close</button></div><div class="dlg-body"><div class="row" style="margin-bottom:14px"><label class="btn primary">Upload new<input type="file" id="pick-up" accept="' + (target.kind === 'pdf' ? 'application/pdf' : 'image/jpeg,image/png,image/webp,image/svg+xml') + '" hidden></label><span class="muted">Or choose an uploaded file.</span></div><div id="pick-progress"></div><div id="pick-list"><div class="loading" style="min-height:120px"><div class="spinner"></div></div></div></div>';
+  if (!dlg.open) dlg.showModal();
+  const files = S.media || await loadMedia();
+  const ok = files.filter((f) => target.kind === 'pdf' ? /\.pdf(\?|$)/i.test(f.url) : isImg(f.url));
+  $('#pick-list').innerHTML = ok.length ? '<div class="media">' + ok.map((f) => mediaCard(f, true)).join('') + '</div>' : '<div class="empty">No ' + (target.kind === 'pdf' ? 'PDFs' : 'images') + ' uploaded yet.</div>';
+}
+
+// ---------- news editor ----------
+let newsDraft = null, newsIndex = -1, dlgMode = '';
+function openNews(i, keep) {
+  dlgMode = 'news'; newsIndex = i; const L = list('news');
+  if (!keep) newsDraft = i >= 0 ? clone(L[i]) : { cat: 'Project updates', t: '', d: '', img: '', alt: '', vis: 'plan', date: '', link: '', status: 'draft' };
+  const cats = Array.from(new Set(list('news').map((n) => n.cat).concat(['Project updates', 'Announcements', 'News', 'Community highlights', 'Testimonials'])));
+  const dlg = $('#dlg');
+  dlg.innerHTML = '<div class="dlg-head"><h2>' + (i >= 0 ? 'Edit story' : 'New story') + '</h2><button class="btn sm" data-act="dlg-close">Close</button></div><div class="dlg-body">' +
+    '<div class="grid2"><label class="field"><span>Category</span><input type="text" list="news-cats" data-nd="cat" value="' + esc(newsDraft.cat) + '"><datalist id="news-cats">' + cats.map((c) => '<option value="' + esc(c) + '">').join('') + '</datalist></label><label class="field"><span>Status</span><select data-nd="status"><option value="published"' + (newsDraft.status !== 'draft' ? ' selected' : '') + '>Published</option><option value="draft"' + (newsDraft.status === 'draft' ? ' selected' : '') + '>Draft (hidden)</option></select></label></div>' +
+    '<label class="field"><span>Title</span><input type="text" data-nd="t" value="' + esc(newsDraft.t) + '" required></label><label class="field"><span>Summary</span><textarea data-nd="d" rows="4">' + esc(newsDraft.d) + '</textarea></label>' +
+    '<div class="grid2"><label class="field"><span>Date shown (optional)</span><input type="text" data-nd="date" value="' + esc(newsDraft.date) + '" placeholder="e.g. November 2026"><small>Empty shows “Coming soon”.</small></label><label class="field"><span>Read-more link (optional)</span><input type="url" data-nd="link" value="' + esc(newsDraft.link) + '" placeholder="https://"></label></div>' +
+    '<div class="field"><span>Image</span>' + pickerHtml('news', 0, 'img', newsDraft.img) + '</div><div class="grid2"><label class="field"><span>Image description</span><input type="text" data-nd="alt" value="' + esc(newsDraft.alt) + '"></label><label class="field"><span>Without an image, show</span><select data-nd="vis"><option value="plan">The site plan</option><option value="mark"' + (newsDraft.vis === 'mark' ? ' selected' : '') + '>Falcon mark</option><option value="quote"' + (newsDraft.vis === 'quote' ? ' selected' : '') + '>Quote style</option></select></label></div>' +
+    '</div><div class="dlg-foot"><button class="btn" data-act="dlg-close">Cancel</button><button class="btn primary" data-act="news-save">' + (i >= 0 ? 'Save story' : 'Add story') + '</button></div>';
+  if (!dlg.open) dlg.showModal();
+}
+
+// ---------- registrations ----------
+function openLead(id) {
+  const l = (S.leads || []).find((x) => x.id === id); if (!l) return;
+  const row = (k, v) => v ? '<tr><th style="position:static;width:150px">' + k + '</th><td>' + esc(v) + '</td></tr>' : '';
+  const dlg = $('#dlg');
+  dlg.innerHTML = '<div class="dlg-head"><h2>' + esc([l.first, l.last].join(' ') || 'Registration') + '</h2><button class="btn sm" data-act="dlg-close">Close</button></div><div class="dlg-body"><div class="table-wrap"><table><tbody>' +
+    row('Received', fmtDate(l.createdAt)) + row('Email', l.email) + row('Phone', l.phone) + row('ZIP code', l.zip) + row('Interested in', l.interest) + row('Real estate agent', l.agent ? 'Yes' : '') + row('Message', l.comments) + row('Form', l.form) + row('Page', l.page) + row('Last updated', l.updatedAt ? fmtDate(l.updatedAt) : '') +
+    '</tbody></table></div><div class="row" style="margin:16px 0 10px">' + (l.email ? '<a class="btn sm" href="mailto:' + esc(l.email) + '">Email</a>' : '') + (l.phone ? '<a class="btn sm" href="tel:' + esc(l.phone) + '">Call</a>' : '') + '<span class="muted" style="margin-left:6px">Status</span>' + ['new', 'contacted', 'closed'].map((s) => '<button class="btn sm' + (l.status === s ? ' dark' : '') + '" data-act="lead-status" data-id="' + esc(l.id) + '" data-s="' + s + '">' + s[0].toUpperCase() + s.slice(1) + '</button>').join('') + '</div>' +
+    '<label class="field"><span>Internal note</span><textarea id="lead-note" rows="3">' + esc(l.note || '') + '</textarea></label></div><div class="dlg-foot"><button class="btn danger" data-act="lead-del" data-id="' + esc(l.id) + '" style="margin-right:auto">Delete</button><button class="btn" data-act="dlg-close">Close</button><button class="btn primary" data-act="lead-note" data-id="' + esc(l.id) + '">Save note</button></div>';
+  if (!dlg.open) dlg.showModal();
+}
+function csv() {
+  const cols = [['createdAt', 'Received'], ['first', 'First name'], ['last', 'Last name'], ['email', 'Email'], ['phone', 'Phone'], ['zip', 'ZIP'], ['interest', 'Interested in'], ['agent', 'Agent'], ['comments', 'Message'], ['form', 'Form'], ['status', 'Status'], ['note', 'Note']];
+  const cell = (v) => { v = v == null ? '' : String(v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+  const lines = [cols.map((c) => cell(c[1])).join(',')].concat(S.leads.map((l) => cols.map(([k]) => cell(k === 'createdAt' ? new Date(l[k]).toISOString() : k === 'agent' ? (l[k] ? 'Yes' : '') : l[k])).join(',')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv' })); a.download = 'falcon-manor-registrations-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+// ---------- map picker ----------
+let mapIndex = -1;
+function openMap(i) {
+  mapIndex = i; const p = list('places')[i];
+  const dlg = $('#dlg');
+  dlg.innerHTML = '<div class="dlg-head"><h2>Position: ' + esc(p[0]) + '</h2><button class="btn sm" data-act="dlg-close">Close</button></div><div class="dlg-body"><p class="muted" style="margin-top:0">Click the map where this place is. Positions are approximate.</p><div class="mapbox" id="mapbox">' + S.H.defaults.mapSvg + '<span class="pin" id="map-pin"></span></div></div><div class="dlg-foot"><button class="btn" data-act="dlg-close">Done</button></div>';
+  if (!dlg.open) dlg.showModal();
+  placePin(p[2], p[3]);
+}
+function placePin(x, y) { const box = $('#mapbox'), pin = $('#map-pin'); if (!box || !pin) return; pin.style.left = ((x - 20) / 460 * 100) + '%'; pin.style.top = ((y - 140) / 350 * 100) + '%'; }
+
+// ---------- events ----------
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'login') return;
+  e.preventDefault();
+  const err = $('#login-err'), btn = $('button', e.target); btn.disabled = true; err.hidden = true;
+  try { await api('login', { body: { password: e.target.password.value } }); S.authed = true; await loadAll(); }
+  catch (x) { err.textContent = x.message; err.hidden = false; btn.disabled = false; }
+});
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.matches('textarea')) autosize(t);
+  if (t.dataset.tx) { const key = t.dataset.tx, def = (S.H.editables.find((x) => x.key === key) || {}).text; S.draft.texts = Object.assign({}, S.draft.texts); if (t.value === def) delete S.draft.texts[key]; else S.draft.texts[key] = t.value; t.closest('.tx').classList.toggle('changed', t.value !== def); touch(); }
+  else if (t.dataset.mb != null && t.dataset.f) { const L = list('meet'); L[+t.dataset.mb][t.dataset.f] = t.value; setList('meet', L); if (t.dataset.f === 'name') { const h = t.closest('.item').querySelector('h3'); if (h) h.textContent = t.value || 'New builder'; } }
+  else if (t.dataset.faq != null && t.dataset.f !== '0') { const L = list('faq'); L[+t.dataset.faq][+t.dataset.f] = t.value; setList('faq', L); }
+  else if (t.dataset.pl != null && t.matches('input')) { const L = list('places'); const k = +t.dataset.f; if (k === 4) { if (t.value) L[+t.dataset.pl][4] = t.value; else L[+t.dataset.pl].length = 4; } else L[+t.dataset.pl][k] = t.value; setList('places', L); }
+  else if (t.dataset.lot && t.matches('input')) setLot(t.dataset.lot, t.dataset.f, t.value.trim());
+  else if (t.dataset.key1) { S.draft[t.dataset.key1] = t.value; touch(); }
+  else if (t.dataset.more) { S.draft.more = Object.assign({ title: '', body: '' }, S.draft.more, { [t.dataset.more]: t.value }); touch(); }
+  else if (t.dataset.vid != null && t.dataset.f !== 'page') { const L = list('videos'); L[+t.dataset.vid][t.dataset.f] = t.value; setList('videos', L); }
+  else if (t.dataset.set && t.type !== 'checkbox') setSetting(t.dataset.set, t.value);
+  else if (t.dataset.social) { S.draft.social = Object.assign({}, S.draft.social, { [t.dataset.social]: t.value.trim() }); touch(); }
+  else if (t.dataset.nd) newsDraft[t.dataset.nd] = t.value;
+  else if (t.dataset.pick) setPicked(t.dataset.pick, t.dataset.i, t.dataset.f, t.value.trim());
+  else if (t.id === 'tx-q') { S.q = t.value; const pos = t.selectionStart; renderView(); const n = $('#tx-q'); n.focus(); n.setSelectionRange(pos, pos); }
+  else if (t.id === 'lead-q') { S.leadQ = t.value; const pos = t.selectionStart; renderView(); const n = $('#lead-q'); n.focus(); n.setSelectionRange(pos, pos); }
+});
+document.addEventListener('change', async (e) => {
+  const t = e.target;
+  if (t.dataset.faq != null && t.dataset.f === '0') { const L = list('faq'); L[+t.dataset.faq][0] = +t.value; setList('faq', L); }
+  else if (t.dataset.pl != null && t.matches('select')) { const L = list('places'); L[+t.dataset.pl][1] = t.value; setList('places', L); }
+  else if (t.dataset.lot && t.matches('select')) setLot(t.dataset.lot, t.dataset.f, t.value);
+  else if (t.dataset.vid != null && t.dataset.f === 'page') { const L = list('videos'); L[+t.dataset.vid].page = t.value; setList('videos', L); }
+  else if (t.dataset.set && t.type === 'checkbox') setSetting(t.dataset.set, t.checked);
+  else if (t.dataset.nd && t.matches('select')) newsDraft[t.dataset.nd] = t.value;
+  else if (t.id === 'media-up') { const box = $('#up-progress'); await uploadFiles(Array.from(t.files), box); S.media = null; renderView(); }
+  else if (t.id === 'pick-up') { const done = await uploadFiles(Array.from(t.files), $('#pick-progress')); S.media = null; if (done[0] && pickTarget) { choosePicked(done[0].url); } }
+});
+function choosePicked(url) {
+  const t = pickTarget; if (!t) return;
+  setPicked(t.group, t.i, t.f, url); $('#dlg').close();
+  if (t.group === 'news') openNews(newsIndex, true); else renderView();
+  pickTarget = null;
+  toast('File chosen.');
+}
+document.addEventListener('click', async (e) => {
+  const nav = e.target.closest('[data-nav]');
+  if (nav) { S.view = nav.dataset.nav; $('#side') && $('#side').classList.remove('open'); renderSide(); renderView(); if (S.view === 'leads' && !S.leads) refreshLeads(); return; }
+  const pg = e.target.closest('[data-page]'); if (pg) { S.page = pg.dataset.page; S.q = ''; renderView(); return; }
+  const fc = e.target.closest('[data-faqcat]'); if (fc) { S.faqCat = fc.dataset.faqcat; renderView(); return; }
+  const lf = e.target.closest('[data-lf]'); if (lf) { S.leadFilter = lf.dataset.lf; renderView(); return; }
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const act = b.dataset.act, i = +b.dataset.i, d = +b.dataset.d;
+  const move = (key) => { const L = list(key), j = i + d; if (j < 0 || j >= L.length) return; [L[i], L[j]] = [L[j], L[i]]; setList(key, L); renderView(); };
+  try {
+    switch (act) {
+      case 'menu': $('#side').classList.toggle('open'); break;
+      case 'logout': await api('logout', { body: {} }); S.authed = false; S.draft = null; render(); break;
+      case 'preview': localStorage.setItem(PREVIEW_KEY, JSON.stringify(S.draft)); window.open('/?cms-preview=1', '_blank', 'noopener'); break;
+      case 'discard': if (confirm('Discard all unsaved changes?')) { S.draft = normalize(S.published); localStorage.removeItem(WORK_KEY); renderBar(); renderView(); toast('Changes discarded.'); } break;
+      case 'publish': return openPublish();
+      case 'do-publish': {
+        b.disabled = true; const note = ($('#pub-note') || {}).value || '';
+        await api('save', { body: { content: S.draft, note } });
+        const c = await api('content'); S.published = c.content; S.versions = c.versions; S.draft = normalize(c.content); localStorage.removeItem(WORK_KEY);
+        $('#dlg').close(); renderBar(); renderView(); toast('Published. The live site updates within about a minute.'); break;
+      }
+      case 'tx-reset': { S.draft.texts = Object.assign({}, S.draft.texts); delete S.draft.texts[b.dataset.key]; touch(); renderView(); break; }
+      case 'img-pick': openPicker({ group: 'img', i: 0, f: b.dataset.key, kind: 'img' }); break;
+      case 'img-reset': { S.draft.images = Object.assign({}, S.draft.images); delete S.draft.images[b.dataset.key]; touch(); renderView(); break; }
+      case 'pick': openPicker({ group: b.dataset.group, i: b.dataset.i, f: b.dataset.f, kind: b.dataset.kind }); break;
+      case 'pick-clear': setPicked(b.dataset.group, b.dataset.i, b.dataset.f, ''); if (b.dataset.group === 'news') openNews(newsIndex, true); else renderView(); break;
+      case 'pick-choose': choosePicked(b.dataset.url); break;
+      case 'dlg-close': if (dlgMode === 'picker' && pickTarget && pickTarget.group === 'news') { pickTarget = null; openNews(newsIndex, true); break; } $('#dlg').close(); dlgMode = ''; if (S.view === 'places') renderView(); break;
+      case 'mb-add': { const L = list('meet'); L.push({ id: 'builder-' + (L.length + 1), name: 'New builder', title: '', text: '', logo: '', url: '' }); setList('meet', L); renderView(); break; }
+      case 'mb-del': { const L = list('meet'); if (L.length <= 1) { toast('Keep at least one builder.', true); break; } if (!confirm('Remove ' + (L[i].name || 'this builder') + '?')) break; L.splice(i, 1); setList('meet', L); renderView(); break; }
+      case 'mb-move': move('meet'); break;
+      case 'news-add': S.view = 'news'; renderSide(); renderView(); openNews(-1); break;
+      case 'news-edit': openNews(i); break;
+      case 'news-save': {
+        if (!String(newsDraft.t || '').trim()) { toast('Add a title first.', true); break; }
+        const L = list('news'); if (newsIndex >= 0) L[newsIndex] = newsDraft; else L.unshift(newsDraft); setList('news', L); $('#dlg').close(); renderView(); toast(newsIndex >= 0 ? 'Story updated.' : 'Story added.'); break;
+      }
+      case 'news-del': { const L = list('news'); if (!confirm('Delete “' + L[i].t + '”?')) break; L.splice(i, 1); setList('news', L.length ? L : []); renderView(); break; }
+      case 'news-move': move('news'); break;
+      case 'vid-add': { const L = list('videos'); L.unshift({ page: 'schools', t: 'New video', d: '', url: '', img: '' }); setList('videos', L); renderView(); break; }
+      case 'vid-del': { const L = list('videos'); if (!confirm('Delete “' + L[i].t + '”?')) break; L.splice(i, 1); setList('videos', L); renderView(); break; }
+      case 'vid-move': move('videos'); break;
+      case 'faq-add': { const L = list('faq'); L.push([S.faqCat === 'all' ? 0 : +S.faqCat, 'New question', '']); setList('faq', L); renderView(); const last = $$('[data-faq][data-f="1"]').pop(); if (last) { last.focus(); last.select(); } break; }
+      case 'faq-del': { const L = list('faq'); if (L.length <= 1) { toast('Keep at least one question.', true); break; } if (!confirm('Delete this question?')) break; L.splice(i, 1); setList('faq', L); renderView(); break; }
+      case 'faq-move': move('faq'); break;
+      case 'pl-add': { const L = list('places'); L.unshift(['New place', Object.keys(S.H.defaults.mapcat)[0], 250, 320]); setList('places', L); renderView(); openMap(0); break; }
+      case 'pl-del': { const L = list('places'); if (L.length <= 1) { toast('Keep at least one place.', true); break; } if (!confirm('Delete ' + L[i][0] + '?')) break; L.splice(i, 1); setList('places', L); renderView(); break; }
+      case 'pl-pick': openMap(i); break;
+      case 'leads-refresh': await refreshLeads(); toast('Registrations refreshed.'); break;
+      case 'leads-csv': csv(); break;
+      case 'lead-open': openLead(b.dataset.id); break;
+      case 'lead-status': { const r = await api('lead', { body: { id: b.dataset.id, status: b.dataset.s, note: ($('#lead-note') || {}).value } }); replaceLead(r.lead); openLead(r.lead.id); renderSide(); toast('Marked ' + r.lead.status + '.'); break; }
+      case 'lead-note': { const r = await api('lead', { body: { id: b.dataset.id, note: $('#lead-note').value } }); replaceLead(r.lead); toast('Note saved.'); break; }
+      case 'lead-del': { if (!confirm('Delete this registration permanently?')) break; await api('lead-delete', { body: { id: b.dataset.id } }); S.leads = S.leads.filter((l) => l.id !== b.dataset.id); $('#dlg').close(); renderSide(); renderView(); toast('Registration deleted.'); break; }
+      case 'media-copy': { const u = new URL(b.dataset.url, location.origin).href; await navigator.clipboard.writeText(u).then(() => toast('Link copied.'), () => prompt('Copy this link:', u)); break; }
+      case 'media-del': { if (!confirm('Delete ' + fname(b.dataset.url) + '? Pages using it will show the original image instead.')) break; await api('media-delete', { body: { url: b.dataset.url } }); S.media = S.media.filter((f) => f.url !== b.dataset.url); renderView(); toast('File deleted.'); break; }
+      case 'ver-preview': { const r = await api('version', { query: '&p=' + encodeURIComponent(b.dataset.p) }); localStorage.setItem(PREVIEW_KEY, JSON.stringify(normalize(r.content))); window.open('/?cms-preview=1', '_blank', 'noopener'); break; }
+      case 'ver-restore': {
+        if (isDirty() && !confirm('You have unsaved changes. Restoring replaces them. Continue?')) break;
+        if (!confirm('Make this version live again?')) break;
+        await api('restore', { body: { pathname: b.dataset.p } }); const c = await api('content'); S.published = c.content; S.versions = c.versions; S.draft = normalize(c.content); localStorage.removeItem(WORK_KEY); renderBar(); renderView(); toast('Restored and published.'); break;
+      }
+    }
+  } catch (x) { toast(x.message, true); b.disabled = false; }
+});
+// Clicking the area map sets the place's position
+document.addEventListener('click', (e) => {
+  const box = e.target.closest('#mapbox'); if (!box || mapIndex < 0) return;
+  const r = box.getBoundingClientRect(), x = 20 + (e.clientX - r.left) / r.width * 460, y = 140 + (e.clientY - r.top) / r.height * 350;
+  const L = list('places'); L[mapIndex][2] = Math.round(x * 10) / 10; L[mapIndex][3] = Math.round(y * 10) / 10; setList('places', L); placePin(x, y);
+});
+function openPublish() {
+  const dlg = $('#dlg');
+  dlg.innerHTML = '<div class="dlg-head"><h2>Publish changes</h2><button class="btn sm" data-act="dlg-close">Close</button></div><div class="dlg-body"><p style="margin-top:0">Your changes go live on the site within about a minute. The current version stays in History, so you can restore it.</p><label class="field" style="margin:0"><span>Note (optional)</span><input type="text" id="pub-note" maxlength="140" placeholder="e.g. Added builder details"></label></div><div class="dlg-foot"><button class="btn" data-act="dlg-close">Cancel</button><button class="btn primary" data-act="do-publish">Publish now</button></div>';
+  dlg.showModal(); setTimeout(() => $('#pub-note').focus(), 50);
+}
+async function refreshLeads() { try { S.leads = (await api('leads')).leads; } catch (e) { S.leads = S.leads || []; toast(e.message, true); } renderSide(); if (S.view === 'leads' || S.view === 'dashboard') renderView(); }
+function replaceLead(l) { S.leads = S.leads.map((x) => x.id === l.id ? l : x); if (S.view === 'leads') renderView(); }
+window.addEventListener('beforeunload', (e) => { if (S.draft && isDirty()) { e.preventDefault(); e.returnValue = ''; } });
+boot();
+</script>
+</body>
+</html>

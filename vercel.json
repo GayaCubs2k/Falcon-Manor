@@ -1,0 +1,121 @@
+{
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/api/page"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/api/page"
+    },
+    {
+      "source": "/:view(community|homes|lifestyle|relocation|schools|news|hoa|residents|realtors|contact)",
+      "destination": "/api/page?view=:view"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/seo?f=robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/seo?f=sitemap"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "/api/seo?f=llms"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    }
+  ],
+  "functions": {
+    "api/concierge.js": {
+      "maxDuration": 30
+    },
+    "api/page.js": {
+      "includeFiles": "page.html"
+    },
+    "api/seo.js": {
+      "includeFiles": "page.html"
+    },
+    "api/admin.js": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), geolocation=(), microphone=(self)"
+        }
+      ]
+    },
+    {
+      "source": "/img/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/models/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/admin",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}
